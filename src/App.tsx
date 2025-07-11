@@ -72,7 +72,7 @@ function App() {
       ];
 
         try {
-          const device = await navigator.usb.requestDevice({ filters });
+          const device = await (navigator as any).usb.requestDevice({ filters });
           console.log('USB Device found: ', device);
 
           const info = {

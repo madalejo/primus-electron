@@ -1,9 +1,9 @@
 import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
+//import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-const require = createRequire(import.meta.url)
+//const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -29,7 +29,7 @@ let win: BrowserWindow | null
 // Handle USB permission requests
 function setupDeviceHandlers(mainwindow: BrowserWindow) {
   // Allow the webusb api to work
-  mainwindow.webContents.session.setPermissionCheckHandler((webContents, permission) => {
+  mainwindow.webContents.session.setPermissionCheckHandler((_webContents, permission) => {
     if (permission === 'usb' || permission === 'media') {
       return true;
     }
