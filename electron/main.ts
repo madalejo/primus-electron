@@ -26,6 +26,49 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 let win: BrowserWindow | null
 
+// Handle USB permission requests
+function setupDeviceHandlers(mainwindow: BrowserWindow) {
+  // Allow the webusb api to work
+  mainwindow.webContents.session.setPermissionCheckHandler((webContents, permission) => {
+    if (permission === 'usb' || permission === 'media') {
+      return true;
+    }
+    return false;
+  });
+
+  // auto-select usb devices (audio devices)
+  mainwindow.webContents.session.on('select-usb-device', (event, details, callback) => {
+    event.preventDefault();
+
+    // Look for audio devices
+    let audioDevice = details.deviceList.find(device => device.deviceClass === 1);
+
+    //if no audio device found look for PM101
+    if(!audioDevice) {
+      audioDevice = details.deviceList.find(device => 
+        device.productName && device.productName.toLowerCase().includes('pm101'));
+    }
+
+    // if we found matching device, return ID
+    if(audioDevice) {
+      callback(audioDevice.deviceId);
+    } else if (details.deviceList.length > 0) {
+      // return the first device if cant find a specific match
+      callback(details.deviceList[0].deviceId);
+    } else {
+      callback('');
+    }
+  });
+
+  // grant permission to usb devices
+  mainwindow.webContents.session.setDevicePermissionHandler((details) => {
+    if (details.deviceType === 'usb' || details.deviceType === 'hid') {
+      return true;
+    }
+    return false;
+  });
+}
+
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
@@ -33,6 +76,9 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
+
+  //set device handlers
+  setupDeviceHandlers(win)
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
